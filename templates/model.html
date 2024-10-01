@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<!-- SHAPE -->
+
+
+<!-- FEATURES -->
+<section class="bg-gradient-dark-black mt-n11 pt-12 pb-8">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-7 text-center">
+
+        <!-- Heading -->
+        <h2 class="display-3 fw-bold text-white">
+          Model Training
+        </h2>
+
+        <!-- Text -->
+        <p class="lead text-body-secondary mb-9">
+          Machine Learning Build Up
+        </p>
+
+      </div>
+    </div> <!-- / .row -->
+
+    <!-- card start -->
+    <div class="row mt-n7 justify-content-center">
+
+      <!-- First Card -->
+      <div class="col-12 col-sm-6 col-lg-6 mt-7 rounded-3">
+        <div class="card card-bleed shadow-light-lg mb-6 bg-dark">
+          <div class="card-header">
+            <div class="row align-items-center">
+              <div class="col">
+                <!-- Heading -->
+                <h4 class="display-5 fw-bold text-white mb-0">Performa Model</h4>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <!-- List group -->
+            <div class="list-group list-group-flush bg-dark">
+
+              <!-- First list group item -->
+              <div class="list-group-item bg-dark">
+                <div class="row align-items-center">
+                  <div class="col">
+                    <h5 class="mb-0 display-5 text-white fw-bold">Metric</h5>
+                  </div>
+                  <div class="col-auto">
+                    <h5 class="display-5 text-white fw-bold">Score</h5>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Second list group item (Accuracy) -->
+              <div class="list-group-item bg-dark">
+                <div class="row align-items-center">
+                  <div class="col">
+                    <span class="mb-0 display-5 text-white">Accuracy</span>
+                  </div>
+                  <div class="col-auto">
+                    <span class="display-5 text-white">0.88</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Third list group item (Precision) -->
+              <div class="list-group-item bg-dark">
+                <div class="row align-items-center">
+                  <div class="col">
+                    <p class="mb-0 display-5 text-white">Precision</p>
+                  </div>
+                  <div class="col-auto">
+                    <span class="display-5 text-white">0.75</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fourth list group item (Recall) -->
+              <div class="list-group-item bg-dark">
+                <div class="row align-items-center">
+                  <div class="col">
+                    <p class="mb-0 display-5 text-white">Recall</p>
+                  </div>
+                  <div class="col-auto">
+                    <span class="display-5 text-white">0.80</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fifth list group item (F1 Score) -->
+              <div class="list-group-item bg-dark">
+                <div class="row align-items-center">
+                  <div class="col">
+                    <p class="mb-0 display-5 text-white">F1 Score</p>
+                  </div>
+                  <div class="col-auto">
+                    <span class="display-5 text-white">0.81</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-lg-6 mt-7 rounded-3 ">
+        <div class="card card-bleed shadow-light-lg mb-6 bg-dark p-3">
+          <canvas id="churnChart2"></canvas>
+          <script src="{{url_for('static',filename='src/churnDoughnut.js')}}"></script>
+        </div>
+      </div>
+
+      <!-- Card for displaying ROC AUC -->
+      <div class="col-12 col-sm-6 col-lg-8 mt-7 rounded-3">
+        <div class="card card-bleed shadow-light-lg mb-6 bg-dark">
+          <div class="card-header">
+            <h4 class="display-5 fw-bold text-white mb-0">ROC AUC Score</h4>
+          </div>
+          <div class="card-body">
+            <h5 class="text-white">ROC AUC: {{ roc_auc }}</h5>
+          </div>
+          <div class="card-body">
+            <!-- Placeholder for ROC Curve -->
+            <canvas id="rocCurveChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+
+
+    </div>
+
+    <!-- churnChart Model -->
+
+    <!-- Script to draw the ROC curve -->
+
+    <script>
+
+
+      var ctx = document.getElementById('rocCurveChart').getContext('2d');
+      var rocData = {{ roc_curve_data | tojson }};
+      var ctx = document.getElementById('rocCurveChart').getContext('2d');
+      var rocData = {{ roc_curve_data | tojson }};
+      const totalDuration = 2000;
+      const delayBetweenPoints = totalDuration / rocData.tpr.length;
+
+      const previousY = (ctx) =>
+        ctx.index === 0
+          ? ctx.chart.scales.y.getPixelForValue(100)
+          : ctx.chart.getDatasetMeta(ctx.datasetIndex).data[ctx.index - 1].getProps(['y'], true).y;
+
+      const animation = {
+        x: {
+          type: 'number',
+          easing: 'linear',
+          duration: delayBetweenPoints,
+          from: NaN, // the point is initially skipped
+          delay(ctx) {
+            if (ctx.type !== 'data' || ctx.xStarted) {
+              return 0;
+            }
+            ctx.xStarted = true;
+            return ctx.index * delayBetweenPoints;
+          }
+        },
+        y: {
+          type: 'number',
+          easing: 'linear',
+          duration: delayBetweenPoints,
+          from: previousY,
+          delay(ctx) {
+            if (ctx.type !== 'data' || ctx.yStarted) {
+              return 0;
+            }
+            ctx.yStarted = true;
+            return ctx.index * delayBetweenPoints;
+          }
+        }
+      };
+
+
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: rocData.fpr, // False Positive Rate as X-axis
+          datasets: [{
+            label: 'ROC Curve',
+            data: rocData.tpr, // True Positive Rate as Y-axis
+            borderColor: 'rgba(255, 99, 132, 1)',
+            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            fill: false
+          }]
+        },
+        options: {
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'False Positive Rate',
+                color: 'white',
+              },
+              ticks: {
+                color: 'white', // Ubah warna label sumbu X
+                stepSize: 0.5,  // Kelipatan label sumbu X
+                callback: function (value) {
+                  if (value % 0.5 === 0) {
+                    return value;
+                  }
+                  return '';
+                }
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'True Positive Rate',
+                color: 'white',
+              },
+              ticks: {
+                color: 'white' // Ubah warna label sumbu Y
+              }
+            }
+          },
+          animation:animation
+        }
+      });
+    </script>
+
+</section>
+
+
+{% endblock %}
